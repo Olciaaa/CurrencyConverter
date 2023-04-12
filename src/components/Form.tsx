@@ -1,39 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import formData from '../interfaces/formData';
 import FormInput from './FormInput';
+import { ratesProvider } from '../services/ratesProvider';
 
-const Form = ({...props}) => {
-    const currency1:string = "pln";
-    const currency2:string = "gbp";
-
-    const formData:formData = {
-        currentCurrency: "",
+const Form = (): JSX.Element => {
+    const currency1: string = "pln";
+    const currency2: string = "gbp";
+    const [rate, setRate] = useState(1);
+    const [data, setData] = useState<formData>({
         valueInCurrency1: "",
         valueInCurrency2: ""
-    };
-    const [data, setData] = useState(formData);
+    });
 
     useEffect(() => {
-        if(data) {
-            console.log("effect");
-        }
-    }, [data])
+        ratesProvider()
+            .then((res) => {
+                setRate(res);
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }, [])
 
-    let valueChangeForCurrency1 = (value:string)=>{
-        setData({...data, currentCurrency: currency1, valueInCurrency1: value});
+    const roundPrice = (price: number): string => {
+        const priceRounded: number = Math.round( price * 100) / 100;
+        const dec: string = priceRounded.toString().split('.')[1]
+        const len: number = dec && dec.length > 2 ? dec.length : 2
+        return priceRounded.toFixed(len)
+    }
+
+    const multiplier = (currencyId:number, value:number): string => {
+        const rateForSelectedCurrency :number = currencyId === 1?rate:(1/rate);
+        return roundPrice( value * rateForSelectedCurrency);
+    }
+
+    const valueChange = (currencyId:number, value:string) => {
+        setData((prevData) => ({...prevData, [`valueInCurrency${currencyId}`]: value, 
+                                [`valueInCurrency${currencyId === 1?2:1}`]: multiplier(currencyId, +value)}))
     }
     
-    let valueChangeForCurrency2 = (value:string)=>{
-        setData({...data, currentCurrency: currency2, valueInCurrency2: value});
-    }
-
     return (
-        <div>
+        <>
             <form>
-                <FormInput value = {data.valueInCurrency1} inputCurrency = {currency1} valueChange = {valueChangeForCurrency1}/>
-                <FormInput value = {data.valueInCurrency2} inputCurrency = {currency2} valueChange = {valueChangeForCurrency2}/>
+                <FormInput currencyId={1} value = {data.valueInCurrency1} inputCurrency = {currency1} valueChange = {valueChange}/>
+                <FormInput currencyId={2} value = {data.valueInCurrency2} inputCurrency = {currency2} valueChange = {valueChange}/>
             </form>
-        </div>
+            <div>
+                1 PLN = {roundPrice(rate)} GBP
+            </div>
+        </>
     );
 };
 
