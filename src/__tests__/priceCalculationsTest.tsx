@@ -1,4 +1,3 @@
-import { act, render, screen } from '@testing-library/react'
 import { multiplier, formatPrice } from '../services/priceCalculations';
 import Currency from '../interfaces/currency';
 

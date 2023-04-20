@@ -1,7 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import Form from '../components/Form';
-import FormInput from '../components/FormInput';
-import Currency from '../interfaces/currency';
 
 let rate:number = 10;
 
